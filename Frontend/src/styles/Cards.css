@@ -1,0 +1,22 @@
+/* Cards.css */
+.card {
+    background-color: #000;      /* Black background for the card */
+    color: #fff;                 /* White text color for contrast */
+    border: 1px solid #444;      /* Slightly lighter border for definition */
+    border-radius: 8px;          /* Rounded corners */
+    padding: 20px;               /* Padding inside the card */
+    margin: 10px;                /* Margin around the card */
+    text-align: center;          /* Center the text */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Shadow for depth */
+    flex: 1 1 30%;               /* Flex properties to make cards responsive */
+    max-width: 300px;            /* Maximum width for the card */
+}
+
+.card-title {
+    margin: 0;
+    font-size: 20px;
+}
+
+.card-text {
+    margin: 10px 0 0 0;
+}

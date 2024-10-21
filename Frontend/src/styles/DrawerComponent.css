@@ -1,0 +1,37 @@
+*{
+    --backgroundDrawer : rgba(24, 24, 27, 5)
+}
+.drawer{
+    position:absolute;
+    height: 80vh;
+    top:0;
+    background-color: var(--backgroundDrawer);
+    display:block,
+}
+
+.buttonContainer{
+    position: absolute;
+    right: 2vw;
+    display: flex;
+    width: 15vw;
+    justify-content: space-evenly;
+}
+
+.drawheader{
+    border-bottom: 1px solid white;
+    height: 15vh;
+    display: flex;
+    align-items: center;
+    color: #fff;
+    font-weight: 800;
+}
+
+.txtAreaDrawer{
+    width: 100%;
+    min-height: 20vh;
+    max-height: 70vh;
+    border: None;
+    font-size: medium;
+    background-color: var(--backgroundDrawer);
+    padding: 2rem;
+}

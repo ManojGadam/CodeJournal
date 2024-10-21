@@ -1,0 +1,48 @@
+services:
+  frontend:
+    build: ./Frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+  backend:
+    build: ./Backend
+    container_name: backend
+    ports:
+      - "5000:5000"
+      - "5001:5001"  # HTTPS port
+    environment: # Specify the HTTPS port
+      - ASPNETCORE_URLS=http://+:5000
+      - MSSQL_SA_PASSWORD=Password123
+      - DOTNET_ENVIRONMENT="Development"
+    depends_on:
+      - database  
+      - cache
+
+  database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: database
+    user: root
+    environment: 
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password123
+    ports:
+      - "1433:1433"
+    volumes:
+      - db_data:/var/opt/mssql
+      - ./Backend/Context/init.sql:/docker-entrypoint-initdb.d/init.sql
+  
+  cache:
+    image: redis:latest
+    container_name: cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+
+
+volumes:
+  db_data:
+    driver: local # This persists your SQL data on the host system
+  redis-data:
+    

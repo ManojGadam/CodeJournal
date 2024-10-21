@@ -1,0 +1,25 @@
+/* Header.css */
+.navbar-custom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #333;
+    height: 10vh;
+    width: 100%;        
+    position: fixed;    
+    top: 0;             
+    left: 0;            
+    right: 0;           
+    z-index: 1000;
+}
+  
+.navbar-custom .icon {
+    font-size: 24px;   /* Adjust the icon size */
+    color: #fff;       /* Icon color */
+}
+
+.navbar-brand{
+    color: #fff;
+    font-weight: 800;
+}
