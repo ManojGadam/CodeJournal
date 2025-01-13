@@ -11,8 +11,8 @@ using PersonalWebsite.Context;
 namespace PersonalWebsite.Migrations
 {
     [DbContext(typeof(ProblemContext))]
-    [Migration("20240904181712_newFieldsAddition")]
-    partial class newFieldsAddition
+    [Migration("20250113014901_newDatabase")]
+    partial class newDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,7 +24,7 @@ namespace PersonalWebsite.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("PersonalWebsite.Models.Problem", b =>
+            modelBuilder.Entity("PersonalWebsite.Models.Config", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -32,16 +32,45 @@ namespace PersonalWebsite.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("GitToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GitURL")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LeetToken")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Config");
+                });
+
+            modelBuilder.Entity("PersonalWebsite.Models.Problem", b =>
+                {
+                    b.Property<string>("UKey")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Comments")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Difficulty")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
                     b.Property<string>("Link")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("ProblemNumber")
@@ -50,10 +79,7 @@ namespace PersonalWebsite.Migrations
                     b.Property<string>("Tags")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TitleSlug")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
+                    b.HasKey("UKey");
 
                     b.ToTable("Problems");
                 });

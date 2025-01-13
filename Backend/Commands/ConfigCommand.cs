@@ -1,6 +1,6 @@
-﻿namespace PersonalWebsite.Models
+﻿namespace PersonalWebsite.Views
 {
-    public class Config
+    public class ConfigCommand
     {
         public int Id { get; set; }
         public string GitToken { get; set; }

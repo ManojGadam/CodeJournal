@@ -1,0 +1,9 @@
+.pushButton{
+    border : 2px solid #0000;
+    border-radius : 0.5rem;
+    color : rgb(255 255 255 / 1);
+    padding : 0.375rem 1.25rem;
+    background-color : goldenrod;
+    margin : 0 0.55rem;
+    font-weight : 500;
+}

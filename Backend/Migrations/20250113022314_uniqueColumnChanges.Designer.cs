@@ -11,8 +11,8 @@ using PersonalWebsite.Context;
 namespace PersonalWebsite.Migrations
 {
     [DbContext(typeof(ProblemContext))]
-    [Migration("20240909044926_newTable")]
-    partial class newTable
+    [Migration("20250113022314_uniqueColumnChanges")]
+    partial class uniqueColumnChanges
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -51,11 +51,11 @@ namespace PersonalWebsite.Migrations
 
             modelBuilder.Entity("PersonalWebsite.Models.Problem", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Code")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Comments")
                         .HasColumnType("nvarchar(max)");
@@ -67,15 +67,13 @@ namespace PersonalWebsite.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<long>("ProblemNumber")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Tags")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TitleSlug")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");

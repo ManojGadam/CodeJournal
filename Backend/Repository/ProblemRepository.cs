@@ -24,11 +24,11 @@ namespace PersonalWebsite.Repository
 
         public async Task<Boolean> SaveProblem(Problem problem)
         {
-            if (problem.Id != 0)
+            var currProblem = await _context.Problems.Where((x) => x.Id == problem.Id).FirstOrDefaultAsync();
+            if (currProblem != null)
             {
-               var currProblem = await _context.Problems.Where((x) => x.Id == problem.Id).FirstOrDefaultAsync();
-                if (currProblem == null) return false;
                 currProblem.Comments = problem.Comments;
+                currProblem.Code = problem.Code;
                 await _context.SaveChangesAsync();
                 return true;
             }
@@ -46,7 +46,6 @@ namespace PersonalWebsite.Repository
             var configAv = await _context.Config.FirstOrDefaultAsync();
             if (configAv!=null)
             {
-                configAv.LeetToken = config.LeetToken;
                 configAv.GitURL = config.GitURL;
                 config.GitToken = configAv.GitToken;
                 await _context.SaveChangesAsync();

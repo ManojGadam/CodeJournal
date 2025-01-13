@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PersonalWebsite.Context;
 
@@ -10,9 +11,11 @@ using PersonalWebsite.Context;
 namespace PersonalWebsite.Migrations
 {
     [DbContext(typeof(ProblemContext))]
-    partial class ProblemContextModelSnapshot : ModelSnapshot
+    [Migration("20250113050438_configUpdates")]
+    partial class configUpdates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

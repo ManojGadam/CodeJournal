@@ -1,0 +1,26 @@
+{
+    "name":"CodeJournal",
+    "version":"1.0",
+    "description":"Adds code from leetcode to CodeJournal",
+    "manifest_version":3,
+    "author":"Manoj",
+    "permissions": ["scripting", "storage"],
+    "background":{
+        "service_worker": "extension.js"
+    },
+    "content_scripts":[
+        {
+            "matches": [
+				"https://*.leetcode.com/*"
+			],
+            "css":["styles.css"]
+        }
+    ],
+    "host_permissions": [
+        "https://*.leetcode.com/*"
+    ],
+    "action":{
+        "default_popup":"extension.js",
+        "default_title":"CodeJournal"
+    }
+}

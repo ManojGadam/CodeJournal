@@ -17,6 +17,7 @@ using System.Net.Http.Headers;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.EntityFrameworkCore.Storage;
 using StackExchange.Redis;
+using PersonalWebsite.Views;
 
 namespace PersonalWebsite.Controllers
 {
@@ -88,15 +89,15 @@ namespace PersonalWebsite.Controllers
                 throw new Exception("Output object is empty");
             }
             var tags = await GetTags(titleSlug);
-            Problem problem = new() { Name = (string)question["title"], Difficulty = (string)question["difficulty"], Link = url, TitleSlug = (string)question["titleSlug"] , Tags = String.Join(",",tags.Select(x=>x.name).ToList()),ProblemNumber = (long)question["questionFrontendId"] };
+            Problem problem = new() { Name = (string)question["title"], Difficulty = (string)question["difficulty"], Link = url , Tags = String.Join(",",tags.Select(x=>x.name).ToList()),ProblemNumber = (long)question["questionFrontendId"] };
             await _problemRepository.SaveProblem(problem);
             return Ok(new {isSuccessful = true});
         }
 
         [HttpPost("SaveConfiguration")]
-        public async Task<IActionResult> SaveConfiguration([FromBody] Config config)
+        public async Task<IActionResult> SaveConfiguration([FromBody] ConfigCommand config)
         {
-            await _problemRepository.SaveConfiguration(config);
+            await _problemRepository.SaveConfiguration(new Config { GitToken = config.GitToken,GitURL = config.GitURL,Id = config.Id});
             return Ok(new { isSuccessful = true });
         }
 
@@ -142,7 +143,7 @@ namespace PersonalWebsite.Controllers
         private async Task<submissions> GetSubmissionId(string questionSlug)
         {
             var config = await GetConfiguration();
-            _httpClient.DefaultRequestHeaders.Add("Cookie", config.LeetToken);
+           // _httpClient.DefaultRequestHeaders.Add("Cookie", config.LeetToken);
             var variables = new
             {
                 questionSlug,
@@ -161,7 +162,7 @@ namespace PersonalWebsite.Controllers
         {
             //USe this to get runtime and memory
             var config = await GetConfiguration();
-            _httpClient.DefaultRequestHeaders.Add("Cookie", config.LeetToken);
+            //_httpClient.DefaultRequestHeaders.Add("Cookie", config.LeetToken);
             var variables = new { submissionId = id };
             var responseContent = await HandleGraphql("getCode", variables);
             var responseData = JsonConvert.DeserializeObject<CodeDetails>(responseContent);
@@ -227,6 +228,15 @@ namespace PersonalWebsite.Controllers
             var fileInfo = await getResponse.Content.ReadAsStringAsync();
             var fileJson = JsonConvert.DeserializeObject<dynamic>(fileInfo);
             return fileJson?.sha;
+        }
+        [HttpPost("AddProblemDetails")]
+        public async Task<IActionResult> AddProblemDetails([FromBody]LeetCodeProblemCommand problem)
+        {
+            var newProblem = new Problem { Code = problem.Code, Comments = problem.Comments, Id = problem.Id, Name = problem.Name, Difficulty = problem.Difficulty, Link = problem.URL, ProblemNumber = problem.ProblemNumber, Tags = problem.Tags };
+            var res = await _problemRepository.SaveProblem(newProblem);
+            if (!res) throw new Exception("Id not found");
+            await _redis.StringAppendAsync("homePage", System.Text.Json.JsonSerializer.Serialize(newProblem));
+            return Ok(new { isSuccessfull = true });
         }
     }   
 }
