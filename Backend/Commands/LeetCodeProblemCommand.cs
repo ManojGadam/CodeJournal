@@ -10,5 +10,8 @@
         public string? Tags {  get; set; }
         public string? Comments {  get; set; }
         public string? Code { get; set; }
+        public string? RunTimePercentile {  get; set; }
+        public string? MemoryPercentile { get; set; }
+        public string? LangName {  get; set; }
     }
 }

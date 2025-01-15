@@ -13,6 +13,7 @@ namespace PersonalWebsite.Repository
         Task<List<Problem>> GetProblems();
         Task SaveConfiguration(Config config);
         Task<Config> GetConfiguration();
+        Task<Problem> GetProblem(String id);
     }
     public class ProblemRepository : IProblemRepository
     {
@@ -55,6 +56,20 @@ namespace PersonalWebsite.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task<Problem> GetProblem(String id)
+        {
+            try
+            {
+                var problem =  await _context.Problems.Where(x => x.Id == id).FirstOrDefaultAsync();
+                if (problem == null) throw new Exception("Id doesn't exist");
+                return problem;
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+        }
         public async Task<Config> GetConfiguration()
         {
             var config = await _context.Config.FirstAsync();

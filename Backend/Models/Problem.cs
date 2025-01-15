@@ -14,6 +14,9 @@ namespace PersonalWebsite.Models
         public string? Tags { get; set; }
         public long ProblemNumber { get; set; }
         public string? Code { get; set; }
+        public string? MemoryPercentile {  get; set; }
+        public string? TimePercentile { get; set; }
+        public string? LangName {  get; set; }
         //public long RunTime { get; set; }
         //public long? Memory { get; set; }
        // public string? Code { get; set; }
