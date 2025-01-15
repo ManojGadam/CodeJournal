@@ -4,7 +4,7 @@ import "../styles/problemContainer.css"
 import { useState,useEffect } from "react"
 import { getProblems,addProblem,updateProblem,pushToGit,SaveConfiguration } from "../apis/ProblemApis"
 export function ProblemContainer(){
-    const [showCard,setShowCard] = useState(false)
+    //const [showCard,setShowCard] = useState(false)
     const [problems,setProblems] = useState([])
     const [editComments,setEditComments] = useState(false)
     const [problemKey,setProblemKey] = useState("")
@@ -55,16 +55,16 @@ export function ProblemContainer(){
         setEditComments(prev=>!prev)
     }
 
-    const handleButtonOpen = () =>{
-        setShowCard((prev)=>!prev)
-    }
-    function handleClose(){
-        setShowCard((prev)=>!prev)
-    }
+    // const handleButtonOpen = () =>{
+    //     setShowCard((prev)=>!prev)
+    // }
+    // function handleClose(){
+    //     setShowCard((prev)=>!prev)
+    // }
 
-    function setUrl(url){
-        setProblemKey(url)
-    }
+    // function setUrl(url){
+    //     setProblemKey(url)
+    // }
     const saveConfiguration=()=>{
         SaveConfiguration(configData).then((res)=>{
             console.log(res)
@@ -72,9 +72,7 @@ export function ProblemContainer(){
     }
     return(
         <>  
-        {showCard === true ? 
-        <AddProblemCard handleClose={handleClose} setUrl = {setUrl} isSubmitting={isSubmitting} /> : <ViewProblems
-             handleButtonOpen = {handleButtonOpen}
+        <ViewProblems
              problems = {problems}
              setEditComments = {setEditComments}
              isLoading = {isLoading}
@@ -83,7 +81,7 @@ export function ProblemContainer(){
              handleGitClick={handleGitClick}
              saveConfiguration = {saveConfiguration}
              isSubmitting={isSubmitting} //Might cause an issue using same variable for two things
-              /> }
+              /> 
         </>      
     )
 }

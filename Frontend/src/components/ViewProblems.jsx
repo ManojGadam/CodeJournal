@@ -65,7 +65,6 @@ const configArea = () =>{
         <div className="problemContainer">
         <div className="pblmButtonContainer">   
         <Button onClick={()=>setShowConfig((prev)=>!prev)}>Edit Configuration</Button>    
-        <Button onClick={args.handleButtonOpen}>+</Button>
         </div>
         {showConfig?
         <DrawerComponent
