@@ -14,13 +14,13 @@ builder.Services.AddScoped<IProblemRepository, ProblemRepository>();
 builder.Services.AddDbContext<ProblemContext>(options =>
     {
         var connectionString = builder.Configuration.GetConnectionString("Deployment");
-         if (!builder.Environment.IsDevelopment())
-            {
-                var password = Environment.GetEnvironmentVariable("MSSQL_SA_PASSWORD");
-                Console.WriteLine($"Password from env: {connectionString} , {password}");
-                connectionString = string.Format(connectionString, password);
-            }
-            Console.WriteLine($"Total Password: {connectionString}");
+         //if (!builder.Environment.IsDevelopment())
+         //   {
+         //       var password = Environment.GetEnvironmentVariable("MSSQL_SA_PASSWORD");
+         //       Console.WriteLine($"Password from env: {connectionString} , {password}");
+         //       connectionString = string.Format(connectionString, password);
+         //   }
+         //   Console.WriteLine($"Total Password: {connectionString}");
         options.UseSqlServer(connectionString);
     });
 
@@ -76,15 +76,16 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-   var db = scope.ServiceProvider.GetRequiredService<ProblemContext>();
-   // Check if there are any pending migrations
-   var pendingMigrations = db.Database.GetPendingMigrations();
+    var db = scope.ServiceProvider.GetRequiredService<ProblemContext>();
+    // Check if there are any pending migrations
+    var pendingMigrations = db.Database.GetPendingMigrations();
 
-   // Check if the database contains any tables
-   var existingTables = db.Database.GetAppliedMigrations();
-   if(existingTables.Any() || pendingMigrations.Any()){
-   db.Database.Migrate();
-   }
+    // Check if the database contains any tables
+    var existingTables = db.Database.GetAppliedMigrations();
+    if (existingTables.Any() || pendingMigrations.Any())
+    {
+        db.Database.Migrate();
+    }
 }
 
 app.Run();
