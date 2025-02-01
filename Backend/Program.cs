@@ -19,7 +19,7 @@ builder.Services.AddDbContext<ProblemContext>(options =>
          //       var password = Environment.GetEnvironmentVariable("MSSQL_SA_PASSWORD");
          //       Console.WriteLine($"Password from env: {connectionString} , {password}");
          //       connectionString = string.Format(connectionString, password);
-         //   }
+         //   } 
          //   Console.WriteLine($"Total Password: {connectionString}");
         options.UseSqlServer(connectionString);
     });
