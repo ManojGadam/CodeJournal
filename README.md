@@ -2,7 +2,7 @@ CodeJournal - LeetCode Problem Manager
 
 CodeJournal is a full-stack web application designed to help users efficiently journal and manage their LeetCode problems and solutions. Whether you're preparing for coding interviews or just looking to keep track of your problem-solving journey, CodeJournal provides an intuitive platform to organize, store, and update your progress.
 
-Key Features:
+Key Features: 
 
 Problem Management: Easily journal LeetCode problems by storing the problem title, description, and tags for categorization and easy retrieval. OAuth Integration with GitHub: CodeJournal is integrated with GitHub OAuth for secure authentication. This allows users to log in using their GitHub account and ensures a seamless experience. Store Solutions to GitHub: Users can directly store their solutions for LeetCode problems to their GitHub repository. This feature automates the process of uploading and versioning your code, making it easier to maintain a record of your progress. Commenting System: Add and update comments for each problem to keep notes about approaches, challenges faced, or solutions tried. This helps in reflecting on the problem-solving process and serves as a useful resource for future reference. User-Friendly Interface: The application combines both frontend (built with React) and backend (C# with ASP.NET) technologies, providing a smooth and responsive user experience.
 
