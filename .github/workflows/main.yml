@@ -1,5 +1,7 @@
-on: [push]
 name: Build and push to ACR
+on: 
+  push:
+    branches: ["main"]
 
 permissions:
   id-token: write
