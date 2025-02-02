@@ -39,7 +39,8 @@ export function ProblemContainer(){
             setIsLoading(()=>false)
             setProblems(()=>val.data)
         }).catch((error)=>
-            console.log(error)
+            {console.log(error)
+            console.log("test")}
         )
     }
     function handleGitClick(data){
