@@ -3,7 +3,7 @@ on:
   push:
     branches: ["main"]
     paths:
-      - 'backend/**'
+      - 'Backend/**'
 
 permissions:
   id-token: write
@@ -25,5 +25,5 @@ jobs:
           
         - name: 'Build and push image'
           run: |
-            docker build ./Backend -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/sampleapp:${{ github.sha }}
+            docker build ./Backend -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:${{ github.sha }}
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:${{ github.sha }}
