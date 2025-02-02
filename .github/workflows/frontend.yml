@@ -1,0 +1,29 @@
+name: Build and push to ACR
+on: 
+  push:
+    branches: ["main"]
+    paths:
+      - 'Frontend/**'
+
+permissions:
+  id-token: write
+  contents: read
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+        steps:
+        # checkout the repo
+        - uses: actions/checkout@v3
+        - name: Azure login
+          uses: azure/login@v2
+          with:
+              client-id: ${{ secrets.AZURE_CLIENT_ID }}
+              tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+              subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        - name: Login to ACR
+          run: az acr login --name ${{ secrets.REGISTRY_NAME }}
+          
+        - name: 'Build and push image'
+          run: |
+            docker build ./Frontend -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:${{ github.sha }}
+            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:${{ github.sha }}
