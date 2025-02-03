@@ -14,7 +14,7 @@ builder.Services.AddScoped<IProblemRepository, ProblemRepository>();
 builder.Services.AddDbContext<ProblemContext>(options =>
     {
         var connectionString = builder.Configuration.GetConnectionString("Deployment");
-         //if (!builder.Environment.IsDevelopment()) 
+         //if (!builder.Environment.IsDevelopment())
          //   {
          //       var password = Environment.GetEnvironmentVariable("MSSQL_SA_PASSWORD");
          //       Console.WriteLine($"Password from env: {connectionString} , {password}");
