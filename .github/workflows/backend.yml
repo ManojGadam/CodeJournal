@@ -30,7 +30,7 @@ jobs:
         - name: Deploy to Azure Container Instances
           uses: 'azure/aci-deploy@v1'
           with:
-            resource-group: ${{ secrets.RESOURCE_GROUP }}
+            resource-group: ${{ secrets.RESOURCE_GROUP_NAME }}
             image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
             registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
             name: backend
