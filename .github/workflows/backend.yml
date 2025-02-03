@@ -29,7 +29,7 @@ jobs:
             docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
         - name: Update ACI
           run: |
-             az container update \
+             az container create \
               --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
               --name backend \
               --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
