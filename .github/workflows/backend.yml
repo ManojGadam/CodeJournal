@@ -31,13 +31,14 @@ jobs:
         - name: Login to ACR
           run: az acr login --name ${{ secrets.REGISTRY_NAME }}
           
-        - name: Deploy/Update ACI (Idempotent)
-          run: |
-            az container create \
-              --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
-              --name backend \
-              --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest \
-              --registry-username ${{ secrets.REGISTRY_USERNAME }} \
-              --registry-password ${{ secrets.REGISTRY_PASSWORD }} \
-              --location eastus \
-              --restart-policy Always
+        - name: 'Deploy to Azure Container Instances'
+          uses: 'azure/aci-deploy@v1'
+          with:
+            resource-group: ${{ secrets.RESOURCE_GROUP }}
+            dns-name-label: backend-${{ github.run_number }}
+            image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
+            registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+            registry-username: ${{ secrets.REGISTRY_USERNAME }}
+            registry-password: ${{ secrets.REGISTRY_PASSWORD }}
+            name: backend
+            location: 'east us'
