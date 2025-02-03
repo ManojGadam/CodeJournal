@@ -1,4 +1,4 @@
-name: Build and push to ACR
+name: Build and push Frontend
 on: 
   push:
     branches: ["main"]
