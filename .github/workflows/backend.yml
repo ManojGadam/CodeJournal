@@ -28,7 +28,9 @@ jobs:
           if: always()
           run: |
             az container delete --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} --name backend --yes || true
-
+        - name: Login to ACR
+          run: az acr login --name ${{ secrets.REGISTRY_NAME }}
+          
         - name: Deploy/Update ACI (Idempotent)
           run: |
             az container create \
@@ -36,5 +38,4 @@ jobs:
               --name backend \
               --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest \
               --location eastus \
-              --registry-username codeJournalacr
               --restart-policy Always
