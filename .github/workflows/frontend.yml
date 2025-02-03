@@ -23,7 +23,13 @@ jobs:
         - name: Login to ACR
           run: az acr login --name ${{ secrets.REGISTRY_NAME }}
           
-        - name: 'Build and push image'
+        - name: Build and push image to ACR
           run: |
             docker build ./Frontend -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest
             docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest
+        - name: Update ACI
+          run: |
+             az container update \
+              --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
+              --name backend \
+              --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/frontend:latest
