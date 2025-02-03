@@ -27,12 +27,16 @@ jobs:
           run: |
             docker build ./Backend -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
             docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
-        - name: Deploy to Azure Container Instances
-          uses: 'azure/aci-deploy@v1'
-          with:
-            resource-group: ${{ secrets.RESOURCE_GROUP_NAME }}
-            image: ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
-            dns-name-label: backend-${{ github.run_number }} # Placeholder - not used for DNS
-            registry-login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
-            name: backend
-            location: 'east us'
+        - name: Delete Existing ACI (If it exists)
+          if: always()
+          run: |
+            az container delete --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} --name backend --yes || true
+
+        - name: Deploy/Update ACI (Idempotent)
+          run: |
+            az container create \
+              --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
+              --name backend \
+              --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest \
+              --location eastus \
+              --restart-policy Always
