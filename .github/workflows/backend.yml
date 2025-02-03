@@ -23,10 +23,7 @@ jobs:
         - name: Login to ACR
           run: az acr login --name ${{ secrets.REGISTRY_NAME }}
           
-        - name: Build and push image to ACR
-          run: |
-            docker build ./Backend -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
-            docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest
+
         - name: Delete Existing ACI (If it exists)
           if: always()
           run: |
@@ -39,4 +36,5 @@ jobs:
               --name backend \
               --image ${{ secrets.REGISTRY_LOGIN_SERVER }}/backend:latest \
               --location eastus \
+              --registry-username codeJournalacr
               --restart-policy Always
