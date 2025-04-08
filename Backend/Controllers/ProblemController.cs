@@ -18,11 +18,16 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.EntityFrameworkCore.Storage;
 using StackExchange.Redis;
 using PersonalWebsite.Views;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Identity.Web.Resource;
+using System.Security.Claims;
+using PersonalWebsite.Commands;
 
 namespace PersonalWebsite.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize()]
     public class ProblemController : Controller
     {
         private readonly HttpClient _httpClient;
@@ -36,25 +41,64 @@ namespace PersonalWebsite.Controllers
             _redis = multiplexer.GetDatabase();
         }
 
+        private string getSub()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "sub");
+            }
+            if (userIdClaim == null || string.IsNullOrEmpty(userIdClaim.Value))
+            {
+                throw new UnauthorizedAccessException("User identifier not found in the token.");
+            }
+            return userIdClaim.Value;
+        }
+
+        private async Task<int> getUserId()
+        {
+            var userId = getSub();
+            int id = await _problemRepository.GetUserIdFromClaim(userId);
+            return id;
+        }
+
+        [HttpPost("RegisterUser")]
+        [RequiredScope("Problems.Add")]
+        public async Task<IActionResult> RegisterUser([FromBody]UserDetailsCommand user)
+        {
+            try
+            {
+                var uid = getSub();
+                await _problemRepository.RegisterUser(new Models.User { Name = user.Name, Email = user.Email,AuthId = getSub() });
+                return Ok(new { isSuccessful = true});
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        [RequiredScope("Problems.Read")]
         [HttpGet("GetProblems")]
         public async Task<IActionResult> GetProblems()
         {
             try
             {
-                var json = _redis.StringGetAsync("homePage").GetAwaiter().GetResult();
+               // var json = _redis.StringGetAsync("homePage").GetAwaiter().GetResult();
                 List<ProblemView> problems;
                 //Console.WriteLine(json.ToString());
-                if (json.IsNullOrEmpty)
-                {
-                    var problem = await _problemRepository.GetProblems();
+                //if (json.IsNullOrEmpty)
+                //{
+                int userId = await getUserId();
+                var problem = await _problemRepository.GetProblems(userId);
                     problems = problem.Select(x=>new ProblemView() { Comments = x.Comments, Difficulty = x.Difficulty, Id = x.Id,Link = x.Link,Name = x.Name,ProblemNumber =  x.ProblemNumber,Tags =x.Tags }).ToList();
-                   var jsonStr = System.Text.Json.JsonSerializer.Serialize(problems);
-                     //problems = System.Text.Json.JsonSerializer.Deserialize<List<Problem>>(jsonStr);
-                    var setProblems = _redis.StringSetAsync("homePage", jsonStr);
-                    var expiry = _redis.KeyExpireAsync("homePage", TimeSpan.FromMinutes(5));
-                    await Task.WhenAll(setProblems, expiry);
-                }
-                else problems = System.Text.Json.JsonSerializer.Deserialize<List<ProblemView>>(json);
+                   //var jsonStr = System.Text.Json.JsonSerializer.Serialize(problems);
+                   //  //problems = System.Text.Json.JsonSerializer.Deserialize<List<Problem>>(jsonStr);
+                   // var setProblems = _redis.StringSetAsync("homePage", jsonStr);
+                   // var expiry = _redis.KeyExpireAsync("homePage", TimeSpan.FromMinutes(5));
+                   // await Task.WhenAll(setProblems, expiry);
+                //}
+                //else problems = System.Text.Json.JsonSerializer.Deserialize<List<ProblemView>>(json);
                 //fix this
                 return Ok(problems);
             }
@@ -66,24 +110,27 @@ namespace PersonalWebsite.Controllers
 
         }
 
+        [RequiredScope("Problems.Add")]
         [HttpPost("SaveConfiguration")]
         public async Task<IActionResult> SaveConfiguration([FromBody] ConfigCommand config)
         {
-            await _problemRepository.SaveConfiguration(new Config { GitToken = config.GitToken,GitURL = config.GitURL,Id = config.Id});
+            int userId = await getUserId();
+            await _problemRepository.SaveConfiguration(new Config { GitToken = config.GitToken,GitURL = config.GitURL,Id = config.Id},userId);
             return Ok(new { isSuccessful = true });
         }
- 
-       
+
+        [RequiredScope("Problems.Add")]
         [HttpPost("PushToGit")]
         public async Task<IActionResult> PushToGit([FromBody]GitContent content)
         {
             //check this
-            var config = await GetConfiguration();
+            int userId = await getUserId();
+            var config = await _problemRepository.GetConfiguration(userId);
             var RepoName = config.GitURL;
             var Token = config.GitToken;
             _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("PersonalWebsite");
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
-            var response = await _problemRepository.GetProblem(content.Id);
+            var response = await _problemRepository.GetProblem(content.Id,userId);
             var userName = RepoName.Split('/')[3];
             var Repo = RepoName.Split('/')[4];
             var commitMessage = $"[Time Beats: {response.TimePercentile}%] [Memory Beats: {response.MemoryPercentile}%] [Solved on: {DateTime.Now:D}]";
@@ -110,16 +157,18 @@ namespace PersonalWebsite.Controllers
                 throw new Exception(errorContent);
             }
         }
-      
+
+        [RequiredScope("Problems.Add")]
         [HttpPost("AddProblemDetails")]
         public async Task<IActionResult> AddProblemDetails([FromBody]LeetCodeProblemCommand problem)
         {
             try
             {
+                int userId = await getUserId();
                 var newProblem = new Problem { Code = problem.Code, Comments = problem.Comments, Id = problem.Id, Name = problem.Name, Difficulty = problem.Difficulty, Link = problem.URL, ProblemNumber = problem.ProblemNumber, Tags = problem.Tags,LangName=problem.LangName,MemoryPercentile=problem.MemoryPercentile,TimePercentile=problem.RunTimePercentile };
-                var res = await _problemRepository.SaveProblem(newProblem);
+                var res = await _problemRepository.SaveProblem(newProblem,userId);
                 if (!res) throw new Exception("Id not found");
-                await _redis.StringAppendAsync("homePage", System.Text.Json.JsonSerializer.Serialize(newProblem));
+                //await _redis.StringAppendAsync("homePage", System.Text.Json.JsonSerializer.Serialize(newProblem));
                 return Ok(new { isSuccessfull = true });
             }
             catch (RedisException ex)
@@ -128,104 +177,6 @@ namespace PersonalWebsite.Controllers
                 throw;
             }
 
-        }
-
-        //Code related to prev apprach no longer necessary
-        #region
-        //Split into three apis
-        [HttpPost("SaveProblem")]
-        public async Task<IActionResult> SaveProblem([FromBody] String url)
-        {
-            int i = 30;
-            await _redis.KeyDeleteAsync("homePage");
-            StringBuilder title = new();
-            while (!url[i].Equals('/'))
-            {
-                title.Append(url[i]);
-                i++;
-            }
-            String titleSlug = title.ToString();
-            var variables = new { titleSlug };
-            var responseContent = await HandleGraphql("saveProblem", variables);
-            var responseData = JObject.Parse(responseContent);
-            var data = responseData["data"];
-            if (data == null || !data.HasValues)
-            {
-                throw new Exception("Output object is empty");
-            }
-            var question = data["question"];
-            if (question == null || !question.HasValues)
-            {
-                throw new Exception("Output object is empty");
-            }
-            var tags = await GetTags(titleSlug);
-            Problem problem = new() { Name = (string)question["title"], Difficulty = (string)question["difficulty"], Link = url, Tags = String.Join(",", tags.Select(x => x.name).ToList()), ProblemNumber = (long)question["questionFrontendId"] };
-            await _problemRepository.SaveProblem(problem);
-            return Ok(new { isSuccessful = true });
-        }
-        // Delete cookie before pushing to github. Using cookie to handle the authecation need to update it
-        private async Task<submissions> GetSubmissionId(string questionSlug)
-        {
-            var config = await GetConfiguration();
-            // _httpClient.DefaultRequestHeaders.Add("Cookie", config.LeetToken);
-            var variables = new
-            {
-                questionSlug,
-                offset = 0,
-                limit = 20,
-                lastKey = (string?)null
-            };
-            var responseContent = HandleGraphql("getSubmissionId", variables).GetAwaiter().GetResult();
-            var leetCodeResponse = JsonConvert.DeserializeObject<SubmissionResponse>(responseContent);
-            var response = leetCodeResponse.data.questionSubmissionList.Submissions.FirstOrDefault(x => x.status == 10) ?? throw new Exception("No accepted submission");
-            var code = GetCode(response.Id).GetAwaiter().GetResult();
-            response.codeDetails = code;
-            return response;
-        }
-        private async Task<CodeDetails> GetCode(long id)
-        {
-            //USe this to get runtime and memory
-            var config = await GetConfiguration();
-            //_httpClient.DefaultRequestHeaders.Add("Cookie", config.LeetToken);
-            var variables = new { submissionId = id };
-            var responseContent = await HandleGraphql("getCode", variables);
-            var responseData = JsonConvert.DeserializeObject<CodeDetails>(responseContent);
-            return responseData;
-        }
-        private async Task<string> HandleGraphql(string queryName, object variables)
-        {
-            var leetcodeApiUrl = "https://leetcode.com/graphql";
-            var graphqlRequest = new
-            {
-                query = QueryDictionary.GetQuery(queryName),
-                variables
-            };
-            var httpResponse = _httpClient.PostAsJsonAsync(leetcodeApiUrl, graphqlRequest, CancellationToken.None).GetAwaiter().GetResult();
-            if (!httpResponse.IsSuccessStatusCode)
-            {
-                throw new Exception("Api failed");
-            }
-            var responseContent = httpResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            return responseContent;
-        }
-        private async Task<Config> GetConfiguration()
-        {
-            return await _problemRepository.GetConfiguration();
-        }
-
-        private async Task<List<topicTag>> GetTags(String titleSlug)
-        {
-            var variables = new { titleSlug };
-            var responseData = await HandleGraphql("getTags", variables);
-            var leetCodeResponse = JsonConvert.DeserializeObject<GraphQLResponse>(responseData);
-
-            if (leetCodeResponse?.Data?.Question?.TopicTags == null)
-            {
-                throw new Exception("Output object is empty");
-            }
-
-            return leetCodeResponse.Data.Question.TopicTags;
-            //return Ok(topicTags);
         }
         private async Task<string?> GetSha(string url)
         {
@@ -234,23 +185,122 @@ namespace PersonalWebsite.Controllers
             var fileJson = JsonConvert.DeserializeObject<dynamic>(fileInfo);
             return fileJson?.sha;
         }
-        [HttpPost("AddProblem")]
-        public async Task<IActionResult> AddProblem([FromBody] Problem problem)
-        {
-            try
-            {
-                await _redis.KeyDeleteAsync("homePage");
-                Boolean res = await _problemRepository.SaveProblem(problem);
-                if (!res) throw new Exception("Id not found");
-                return Ok(new { isSuccessfull = true });
-            }
-            catch (RedisException ex)
-            {
-                Console.WriteLine($"Redis error: {ex.Message}");
-                throw;
-            }
 
-        }
+        //Code related to prev apprach no longer necessary
+        #region
+        //Split into three apis
+        //[HttpPost("SaveProblem")]
+        //public async Task<IActionResult> SaveProblem([FromBody] String url)
+        //{
+        //    int i = 30;
+        //    //await _redis.KeyDeleteAsync("homePage");
+        //    StringBuilder title = new();
+        //    while (!url[i].Equals('/'))
+        //    {
+        //        title.Append(url[i]);
+        //        i++;
+        //    }
+        //    String titleSlug = title.ToString();
+        //    var variables = new { titleSlug };
+        //    var responseContent = await HandleGraphql("saveProblem", variables);
+        //    var responseData = JObject.Parse(responseContent);
+        //    var data = responseData["data"];
+        //    if (data == null || !data.HasValues)
+        //    {
+        //        throw new Exception("Output object is empty");
+        //    }
+        //    var question = data["question"];
+        //    if (question == null || !question.HasValues)
+        //    {
+        //        throw new Exception("Output object is empty");
+        //    }
+        //    var tags = await GetTags(titleSlug);
+        //    Problem problem = new() { Name = (string)question["title"], Difficulty = (string)question["difficulty"], Link = url, Tags = String.Join(",", tags.Select(x => x.name).ToList()), ProblemNumber = (long)question["questionFrontendId"] };
+        //    await _problemRepository.SaveProblem(problem);
+        //    return Ok(new { isSuccessful = true });
+        //}
+        //// Delete cookie before pushing to github. Using cookie to handle the authecation need to update it
+        //private async Task<submissions> GetSubmissionId(string questionSlug)
+        //{
+        //    var config = await GetConfiguration();
+        //    // _httpClient.DefaultRequestHeaders.Add("Cookie", config.LeetToken);
+        //    var variables = new
+        //    {
+        //        questionSlug,
+        //        offset = 0,
+        //        limit = 20,
+        //        lastKey = (string?)null
+        //    };
+        //    var responseContent = HandleGraphql("getSubmissionId", variables).GetAwaiter().GetResult();
+        //    var leetCodeResponse = JsonConvert.DeserializeObject<SubmissionResponse>(responseContent);
+        //    var response = leetCodeResponse.data.questionSubmissionList.Submissions.FirstOrDefault(x => x.status == 10) ?? throw new Exception("No accepted submission");
+        //    var code = GetCode(response.Id).GetAwaiter().GetResult();
+        //    response.codeDetails = code;
+        //    return response;
+        //}
+        //private async Task<CodeDetails> GetCode(long id)
+        //{
+        //    //USe this to get runtime and memory
+        //    var config = await GetConfiguration();
+        //    //_httpClient.DefaultRequestHeaders.Add("Cookie", config.LeetToken);
+        //    var variables = new { submissionId = id };
+        //    var responseContent = await HandleGraphql("getCode", variables);
+        //    var responseData = JsonConvert.DeserializeObject<CodeDetails>(responseContent);
+        //    return responseData;
+        //}
+        //private async Task<string> HandleGraphql(string queryName, object variables)
+        //{
+        //    var leetcodeApiUrl = "https://leetcode.com/graphql";
+        //    var graphqlRequest = new
+        //    {
+        //        query = QueryDictionary.GetQuery(queryName),
+        //        variables
+        //    };
+        //    var httpResponse = _httpClient.PostAsJsonAsync(leetcodeApiUrl, graphqlRequest, CancellationToken.None).GetAwaiter().GetResult();
+        //    if (!httpResponse.IsSuccessStatusCode)
+        //    {
+        //        throw new Exception("Api failed");
+        //    }
+        //    var responseContent = httpResponse.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        //    return responseContent;
+        //}
+        //private async Task<Config> GetConfiguration()
+        //{
+        //    return await _problemRepository.GetConfiguration();
+        //}
+
+        //private async Task<List<topicTag>> GetTags(String titleSlug)
+        //{
+        //    var variables = new { titleSlug };
+        //    var responseData = await HandleGraphql("getTags", variables);
+        //    var leetCodeResponse = JsonConvert.DeserializeObject<GraphQLResponse>(responseData);
+
+        //    if (leetCodeResponse?.Data?.Question?.TopicTags == null)
+        //    {
+        //        throw new Exception("Output object is empty");
+        //    }
+
+        //    return leetCodeResponse.Data.Question.TopicTags;
+        //    //return Ok(topicTags);
+        //}
+
+        //[HttpPost("AddProblem")]
+        //public async Task<IActionResult> AddProblem([FromBody] Problem problem)
+        //{
+        //    try
+        //    {
+        //       // await _redis.KeyDeleteAsync("homePage");
+        //        Boolean res = await _problemRepository.SaveProblem(problem);
+        //        if (!res) throw new Exception("Id not found");
+        //        return Ok(new { isSuccessfull = true });
+        //    }
+        //    catch (RedisException ex)
+        //    {
+        //        Console.WriteLine($"Redis error: {ex.Message}");
+        //        throw;
+        //    }
+
+        //}
         #endregion
 
     }
