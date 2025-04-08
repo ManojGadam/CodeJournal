@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.SqlServer;
 using PersonalWebsite.Repository;
 using StackExchange.Redis;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Identity.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,7 @@ builder.Services.AddDbContext<ProblemContext>(options =>
          //   Console.WriteLine($"Total Password: {connectionString}");
         options.UseSqlServer(connectionString);
     });
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddMicrosoftIdentityWebApi(builder.Configuration);
 
 // builder.Services.AddHttpsRedirection(options =>
 // {
@@ -54,18 +57,10 @@ if (app.Environment.IsDevelopment())
         c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
     });
 }
-else
-{
-    app.UseExceptionHandler("/Home/Error");
-
-    // Consider using HSTS in production
-    //app.UseHsts();
-
-    // Enable HTTPS redirection unless running behind a proxy that handles HTTPS
-    //app.UseHttpsRedirection();
-}
 
 
+app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseCors("AllowAllOrigins");
 app.UseRouting();
 
@@ -74,18 +69,18 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ProblemContext>();
-    // Check if there are any pending migrations
-    var pendingMigrations = db.Database.GetPendingMigrations();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var db = scope.ServiceProvider.GetRequiredService<ProblemContext>();
+//    // Check if there are any pending migrations
+//    var pendingMigrations = db.Database.GetPendingMigrations();
 
-    // Check if the database contains any tables
-    var existingTables = db.Database.GetAppliedMigrations();
-    if (existingTables.Any() || pendingMigrations.Any())
-    {
-        db.Database.Migrate();
-    }
-}
+//    // Check if the database contains any tables
+//    var existingTables = db.Database.GetAppliedMigrations();
+//    if (existingTables.Any() || pendingMigrations.Any())
+//    {
+//        db.Database.Migrate();
+//    }
+//}
 
 app.Run();

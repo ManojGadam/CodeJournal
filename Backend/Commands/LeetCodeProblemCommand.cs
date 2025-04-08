@@ -3,7 +3,7 @@
     public class LeetCodeProblemCommand
     {
         public long ProblemNumber { get; set; }
-        public string Id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
         public string? URL { get; set; }
         public string? Difficulty {  get; set; }
