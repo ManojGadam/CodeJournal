@@ -1,4 +1,4 @@
-CodeJournal - LeetCode Problem Manager
+[![Build and push to ACR](https://github.com/ManojGadam/CodeJournal/actions/workflows/backend.yml/badge.svg)](https://github.com/ManojGadam/CodeJournal/actions/workflows/backend.yml)CodeJournal - LeetCode Problem Manager
 
 CodeJournal is a full-stack web application designed to help users efficiently journal and manage their LeetCode problems and solutions. Whether you're preparing for coding interviews or just looking to keep track of your problem-solving journey, CodeJournal provides an intuitive platform to organize, store, and update your progress.
 
